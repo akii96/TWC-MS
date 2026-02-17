@@ -1,0 +1,23 @@
+{
+  "description": "Test prompts for stress testing LLM serving",
+  "default_params": {
+    "stream": false,
+    "top_p": 0.95,
+    "temperature": 0.9,
+    "repetition_penalty": 1.05,
+    "max_tokens": 3000
+  },
+  "extra_params": {
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    }
+  },
+  "prompts": [
+    {
+      "role": "user",
+      "content": "only yes or no. is there winter in africa?",
+      "expected_pattern": "yes",
+      "description": "Simple yes/no question to verify basic inference"
+    }
+  ]
+}

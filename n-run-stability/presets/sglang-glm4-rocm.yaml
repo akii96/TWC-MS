@@ -1,0 +1,54 @@
+# SGLang GLM-4.7 on ROCm (AMD GPUs)
+# ==================================
+# Preset for stress testing GLM-4.7-FP8 on AMD MI300X GPUs with SGLang.
+#
+# Usage:
+#   ./stress_test.sh --config presets/sglang-glm4-rocm.yaml
+
+framework: sglang
+
+docker:
+  image: lmsysorg/sglang:v0.5.8-rocm700-mi30x
+  shm_size: 128G
+  network: host
+  devices:
+    - /dev/kfd
+    - /dev/dri
+
+env:
+  ROCM_QUICK_REDUCE_QUANTIZATION: INT4
+  HSA_NO_SCRATCH_RECLAIM: 1
+  SGLANG_USE_AITER: 1
+  SAFETENSORS_FAST_GPU: 1
+  SGLANG_AITER_MLA_PERSIST: 0
+
+server:
+  port: 30000
+  startup_timeout: 600
+  model_path: zai-org/GLM-4.7-FP8
+
+server_args:
+  tp-size: 8
+  mem-fraction-static: 0.8
+  tool-call-parser: glm47
+  reasoning-parser: glm45
+
+timeouts:
+  container: 900
+  prompt: 120
+
+test:
+  num_loops: 20
+  prompts_per_loop: 10
+  success_pattern: "yes"
+
+error_patterns:
+  - HSA_STATUS_ERROR_EXCEPTION
+  - OutOfMemoryError
+  - RuntimeError
+
+workspace:
+  base_dir: "$HOME"
+  mounts:
+    - .cache
+    - data
