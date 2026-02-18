@@ -224,8 +224,10 @@ exec vllm serve ${MODEL} \\
     --gpu-memory-utilization 0.7 \\
     --no-enable-prefix-caching \\
     --quantization fp8 \\
+    --attention_config.backend ROCM_ATTN \\
+    --trust_remote_code \\
     --chat-template /tmp/fallback_chat_template.jinja \\
-    --compilation-config '{"cudagraph_mode": "FULL_AND_PIECEWISE"}'
+    --compilation-config '{"cudagraph_mode": "FULL", "custom_ops": ["+quant_fp8"], "splitting_ops": [], "pass_config": {"eliminate_noops": true, "fuse_norm_quant": true, "fuse_act_quant": true, "fuse_attn_quant": true}}'
 LAUNCH_EOF
         chmod +x "$LAUNCH_SCRIPT"
 
@@ -320,9 +322,12 @@ LAUNCH_EOF
 import json, sys
 print(json.dumps({
     'model': sys.argv[1],
-    'messages': [{'role': 'user', 'content': sys.argv[2]}],
+    'messages': [
+        {'role': 'system', 'content': 'You are a helpful assistant. Respond only in English. Do not use any other languages.'},
+        {'role': 'user', 'content': sys.argv[2]}
+    ],
     'max_tokens': 512,
-    'temperature': 0.7
+    'temperature': 0
 }))
 " "$MODEL" "$PROMPT")
 
